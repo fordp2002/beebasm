@@ -41,6 +41,7 @@
 #include "discimage.h"
 #include "basic_tokenize.h"
 #include "random.h"
+#include "listing.h"
 
 
 using namespace std;
@@ -530,6 +531,7 @@ void LineParser::HandleDefineLabel()
 			}
 
 			SymbolTable::Instance().AddLabel(symbolName);
+			Listing::Instance().NoteAddress( ObjectCode::Instance().GetPC() );
 		}
 
 		if ( m_sourceCode->ShouldOutputAsm() )
@@ -600,6 +602,7 @@ void LineParser::HandleOrg()
 
 	ObjectCode::Instance().SetPC( newPC );
 	SymbolTable::Instance().ChangeBuiltInSymbol( "P%", newPC );
+	Listing::Instance().NoteAddress( newPC );
 }
 
 
@@ -1231,6 +1234,8 @@ void LineParser::HandleSave()
 
 	if ( GlobalData::Instance().IsSecondPass() )
 	{
+		Listing::Instance().NoteSave( saveFile, start, end, exec, reload );
+
 		if ( GlobalData::Instance().UsesDiscImage() )
 		{
 			// disc image version of the save
@@ -1761,6 +1766,11 @@ void LineParser::HandleMacro()
 		 GlobalData::Instance().IsFirstPass() )
 	{
 		m_sourceCode->GetCurrentMacro()->AddLine("\n");
+
+		if ( Listing::Instance().IsEnabled() )
+		{
+			m_sourceCode->GetCurrentMacro()->AddRawLine( string() );
+		}
 	}
 
 	// Set the IF condition to false - this is a cheaty way of ensuring that the macro body

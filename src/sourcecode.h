@@ -24,6 +24,7 @@
 #define SOURCECODE_H_
 
 #include <string>
+#include <vector>
 
 #include "scopedsymbolname.h"
 #include "value.h"
@@ -48,6 +49,11 @@ public:
 	inline const std::string&	GetFilename() const				{ return m_filename; }
 	inline int				GetLineNumber() const			{ return m_lineNumber; }
 	inline const SourceCode*GetParent() const				{ return m_parent; }
+
+	// The text of the lines with tabs intact, only kept when a listing is being written
+
+	void					SetRawLines( const std::vector<std::string>& lines, int firstLineNumber );
+	const std::string*		GetRawLine() const;
 	inline int				GetLineStartPointer() const		{ return m_lineStartPointer; }
 
 	virtual bool			GetLine( std::string& lineFromFile );
@@ -149,6 +155,8 @@ protected:
 	const SourceCode*		m_parent;
 	int						m_lineStartPointer;
 	std::string				m_text;
+	std::vector<std::string>	m_rawLines;
+	int						m_rawFirstLine;
 	int						m_textPointer;
 };
 

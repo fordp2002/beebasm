@@ -1,6 +1,7 @@
 *~
 *.bak
 *.swp
+*.patch
 /beebasm
 /build/
 /src/objects
@@ -8,3 +9,4 @@ test/testlog.txt
 test/**/test
 test/**/test.ssd
 test/**/testgold.txt
+test/**/test.lst

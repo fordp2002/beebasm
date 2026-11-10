@@ -74,10 +74,12 @@ def read_beebasm_switches(file_name):
             return []
         return params[1:]
 
-def beebasm_args(beebasm, file_name, ssd_name):
+def beebasm_args(beebasm, file_name, ssd_name, lst_name = None):
     args = [beebasm, '-v'] + read_beebasm_switches(file_name)
     if ssd_name != None:
         args += ['-do', ssd_name]
+    if lst_name != None:
+        args += ['-list', lst_name]
     args += ['-i', file_name]
     return args
 
@@ -107,14 +109,18 @@ def run_test(beebasm, path, file_names, file_name):
     failure_test = file_name.endswith('.fail.6502')
     gold_ssd = replace_extension(file_name, '.gold.ssd')
     gold_txt = replace_extension(file_name, '.gold.txt')
+    gold_lst = replace_extension(file_name, '.gold.lst')
     ssd_name = None
+    lst_name = None
     gold_capture = None
     if gold_ssd in file_names:
         ssd_name = 'test.ssd'
+    if gold_lst in file_names:
+        lst_name = 'test.lst'
     if gold_txt in file_names:
         gold_capture = 'testgold.txt'
 
-    result = execute_test(beebasm_args(beebasm, file_name, ssd_name), gold_capture)
+    result = execute_test(beebasm_args(beebasm, file_name, ssd_name, lst_name), gold_capture)
 
     if not gold_capture is None:
         # This won't work well if a test produces gigabytes of output.  Don't do that!
@@ -143,6 +149,14 @@ def run_test(beebasm, path, file_names, file_name):
         else:
             print(' failed')
             raise TestFailure('ssd does not match gold ssd: ' + gold_ssd)
+
+    if not failure_test and lst_name != None:
+        print('Comparing listing to', gold_lst, end = '')
+        if compare_files(gold_lst, lst_name):
+            print(' succeeded')
+        else:
+            print(' failed')
+            raise TestFailure('listing does not match gold listing: ' + gold_lst)
 
 def scan_directory(beebasm):
     for (path, directory_names, file_names) in os.walk('.', topdown = True):

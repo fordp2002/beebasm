@@ -29,6 +29,7 @@
 #include "symboltable.h"
 #include "globaldata.h"
 #include "sourcefile.h"
+#include "listing.h"
 
 
 using namespace std;
@@ -80,6 +81,8 @@ void LineParser::Process( const string& line )
 {
 	m_line = line;
 	m_column = 0;
+
+	Listing::Line listingLine( m_sourceCode, line );
 
 	bool bProcessedSomething = false;
 	while ( AdvanceAndCheckEndOfLine() )	// keep going until we reach the end of the line
@@ -378,6 +381,13 @@ void LineParser::SkipStatement()
 		if ( m_column == m_line.length() )
 		{
 			command += '\n';
+
+			const string* rawLine = m_sourceCode->GetRawLine();
+
+			if ( rawLine != NULL )
+			{
+				m_sourceCode->GetCurrentMacro()->AddRawLine( *rawLine );
+			}
 		}
 
 		m_sourceCode->GetCurrentMacro()->AddLine( command );

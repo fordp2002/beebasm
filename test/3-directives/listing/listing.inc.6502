@@ -1,0 +1,5 @@
+\ utility routines
+.util_clear
+	LDA #0			; clear it
+	STA &70
+	RTS

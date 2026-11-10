@@ -53,6 +53,16 @@ public:
 		m_body += line;
 	}
 
+	void AddRawLine( const std::string& line )
+	{
+		m_rawLines.push_back( line );
+	}
+
+	const std::vector<std::string>& GetRawLines() const
+	{
+		return m_rawLines;
+	}
+
 	const std::string& GetName() const
 	{
 		return m_name;
@@ -92,6 +102,7 @@ private:
 	std::string						m_name;
 	std::vector< std::string >		m_parameters;
 	std::string						m_body;
+	std::vector<std::string>		m_rawLines;
 
 };
 

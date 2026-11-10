@@ -168,6 +168,43 @@ Dumps all global and local symbols in Swift-compatible format after assembly.
 
 Write the output of `-d` or `-dd` to the specified file instead of standard output.
 
+`-list <file>`
+
+Write a source listing to the specified file. It is meant for people to read, and for debuggers and emulators to load so that your source can be shown as code is stepped through or a breakpoint is hit. Every line of the source is written out, in order, with the address and machine code it produced in fixed columns on the left and the source text at a fixed offset, so the source keeps its layout (tabs are expanded to 4 spaces):
+
+```
+                    \ Test program
+                    oswrch = &FFEE
+
+                    MACRO twice n
+                        LDA #n      ; load it
+                        JSR oswrch
+                    ENDMACRO
+
+2000                ORG &2000
+2000                .start
+                        twice 65    ; macro call
+2000 A9 41        M     LDA #n      ; load it
+2002 20 EE FF     M     JSR oswrch
+2005 A2 00 A0 01        LDX #0:LDY #1
+2009 01 02 03 04        EQUB 1,2,3,4,5,6
+200D 05 06        .
+200F                .end
+                    SAVE "Main", start, end, start
+# SAVE "Main" 2000 200F 2000 2000   (start end exec reload)
+```
+
+The columns are fixed, counting from 0:
+
+* 0-3: the address in hex. It is shown for lines that assemble code, and for lines that define a label or use `ORG`, which have no code.
+* 5-15: up to 4 bytes of machine code. A line that produces more bytes (`EQUS`, a long `EQUB` list) continues on extra rows with a `.` in column 18. After 16 rows of one line the rest are summarised as `... N more bytes`, so that data tables and `INCBIN` do not swamp the listing.
+* 18: a flag. Blank for the main source file, `I` for a line from an `INCLUDE`d file, `M` for a line of a macro expansion.
+* 20 onwards: the source line as it was written.
+
+Lines that produce no code (comments, blank lines, assignments, directives, and lines in a false `IF`) are included without an address. A macro call is followed by the lines of its expansion, flagged `M`. A `FOR` loop appears once for each time round. Rows starting with `#` in column 0 are comments: a `# file:` row each time the source file changes, and a `# SAVE` row after each `SAVE`. Because BeebAsm can assemble different code at the same addresses (for example several sideways RAM banks), the rows before a `# SAVE` row are the ones that belong to that saved file.
+
+Bytes moved with `COPYBLOCK` are listed where they were assembled, not at their destination. If assembly fails, the listing file is deleted.
+
 `-w`
 
 If specified, there must be whitespace between opcodes and their labels. This introduces an incompatibility with the BBC BASIC assembler, which allows things like `ck_axy=&70:stack_axy` (i.e. `STA &70`), but makes it possible for macros to have names which begin with an opcode name, e.g.:
@@ -734,6 +771,7 @@ There is also a demo called `"relocdemo.asm"`, which shows how the 'reload addre
 
 ## 9. VERSION HISTORY
 ```
+(unreleased)      Added -list option to write a source listing (code beside source) for debuggers.
 24/12/2025  1.11  (Potentially breaking) When using the -w option mnemonics must be followed by a space or colon (thanks Homo-carbonis).
                   (Potentially breaking) When not using the -w option macro names may not begin with an assembler mnemonic.
                   Various CMake fixes (thanks Cameron Crawley).

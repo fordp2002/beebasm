@@ -25,6 +25,7 @@
 #include <fstream>
 
 #include "objectcode.h"
+#include "listing.h"
 #include "symboltable.h"
 #include "asmexception.h"
 #include "globaldata.h"
@@ -172,6 +173,7 @@ void ObjectCode::PutByte( unsigned int byte )
 
 	m_aFlags[ m_PC ] |= USED;
 	m_aMemory[ m_PC++ ] = byte;
+	Listing::Instance().NoteByte( m_PC - 1, m_aMemory[ m_PC - 1 ] );
 
 	SymbolTable::Instance().ChangeBuiltInSymbol( "P%", m_PC );
 }
@@ -215,6 +217,7 @@ void ObjectCode::Assemble1( unsigned int opcode )
 
 	m_aFlags[ m_PC ] |= ( USED | CHECK );
 	m_aMemory[ m_PC++ ] = opcode;
+	Listing::Instance().NoteByte( m_PC - 1, m_aMemory[ m_PC - 1 ] );
 
 	SymbolTable::Instance().ChangeBuiltInSymbol( "P%", m_PC );
 }
@@ -261,8 +264,10 @@ void ObjectCode::Assemble2( unsigned int opcode, unsigned int val )
 
 	m_aFlags[ m_PC ] |= ( USED | CHECK );
 	m_aMemory[ m_PC++ ] = opcode;
+	Listing::Instance().NoteByte( m_PC - 1, m_aMemory[ m_PC - 1 ] );
 	m_aFlags[ m_PC ] |= USED;
 	m_aMemory[ m_PC++ ] = val;
+	Listing::Instance().NoteByte( m_PC - 1, m_aMemory[ m_PC - 1 ] );
 
 	SymbolTable::Instance().ChangeBuiltInSymbol( "P%", m_PC );
 }
@@ -311,10 +316,13 @@ void ObjectCode::Assemble3( unsigned int opcode, unsigned int addr )
 
 	m_aFlags[ m_PC ] |= ( USED | CHECK );
 	m_aMemory[ m_PC++ ] = opcode;
+	Listing::Instance().NoteByte( m_PC - 1, m_aMemory[ m_PC - 1 ] );
 	m_aFlags[ m_PC ] |= USED;
 	m_aMemory[ m_PC++ ] = addr & 0xFF;
+	Listing::Instance().NoteByte( m_PC - 1, m_aMemory[ m_PC - 1 ] );
 	m_aFlags[ m_PC ] |= USED;
 	m_aMemory[ m_PC++ ] = ( addr & 0xFF00 ) >> 8;
+	Listing::Instance().NoteByte( m_PC - 1, m_aMemory[ m_PC - 1 ] );
 
 	SymbolTable::Instance().ChangeBuiltInSymbol( "P%", m_PC );
 }

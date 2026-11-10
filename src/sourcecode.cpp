@@ -29,6 +29,7 @@
 #include "lineparser.h"
 #include "symboltable.h"
 #include "macro.h"
+#include "listing.h"
 
 using namespace std;
 
@@ -61,6 +62,8 @@ SourceCode::SourceCode( const string& filename, int lineNumber, const std::strin
 		m_textPointer( 0 )
 {
 	// Double-check the supplied text came with a '\n' sentinel
+	m_rawFirstLine = 0;
+
 	if (m_text.empty() || m_text.back() != '\n')
 	{
 		assert(false);
@@ -295,6 +298,7 @@ void SourceCode::UpdateFor( const string& line, int column )
 		// reloop
 		SymbolTable::Instance().ChangeSymbol( thisFor.m_varName, thisFor.m_current );
 		SetFilePointer( thisFor.m_filePtr );
+		Listing::Instance().NoteLoopBack();
 		SymbolTable::Instance().PopScope();
 		SymbolTable::Instance().PushFor(thisFor.m_varName, thisFor.m_current);
 		thisFor.m_count++;
@@ -679,4 +683,32 @@ void SourceCode::SetFilePointer( int i )
 	}
 	m_lineStartPointer = i;
 	m_textPointer = i;
+}
+
+
+
+/*************************************************************************************************/
+/**
+	SourceCode::SetRawLines() / GetRawLine()
+
+	The raw lines are the text of the source with its tabs intact, so that a listing can show the
+	source as it was written. The first one is line number 'firstLineNumber'.
+*/
+/*************************************************************************************************/
+void SourceCode::SetRawLines( const std::vector<std::string>& lines, int firstLineNumber )
+{
+	m_rawLines = lines;
+	m_rawFirstLine = firstLineNumber;
+}
+
+const std::string* SourceCode::GetRawLine() const
+{
+	int index = m_lineNumber - m_rawFirstLine;
+
+	if ( index < 0 || index >= static_cast<int>( m_rawLines.size() ) )
+	{
+		return NULL;
+	}
+
+	return &m_rawLines[ index ];
 }

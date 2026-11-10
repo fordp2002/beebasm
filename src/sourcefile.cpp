@@ -31,6 +31,7 @@
 #include "globaldata.h"
 #include "lineparser.h"
 #include "symboltable.h"
+#include "listing.h"
 
 
 using namespace std;
@@ -105,6 +106,64 @@ static string ReadFile( const string& filename )
 
 /*************************************************************************************************/
 /**
+	ReadRawLines()
+
+	Read the lines of a source file with tabs left alone. Line ends are handled the same way as
+	in ReadFile(). Only used for listings.
+*/
+/*************************************************************************************************/
+static vector<string> ReadRawLines( const string& filename )
+{
+	vector<string> lines;
+	std::ifstream file( filename.c_str(), ios_base::binary );
+
+	if ( !file )
+	{
+		return lines;
+	}
+
+	string current;
+	bool pending = false;
+	char c;
+
+	while ( file.get( c ) )
+	{
+		pending = true;
+
+		if ( c == '\n' )
+		{
+			lines.push_back( current );
+			current.clear();
+			pending = false;
+		}
+		else if ( c == '\r' )
+		{
+			if ( file.peek() != '\n' )
+			{
+				lines.push_back( current );
+				current.clear();
+			}
+
+			pending = false;
+		}
+		else
+		{
+			current += c;
+		}
+	}
+
+	if ( pending || !current.empty() )
+	{
+		lines.push_back( current );
+	}
+
+	return lines;
+}
+
+
+
+/*************************************************************************************************/
+/**
 	SourceFile::SourceFile()
 
 	Constructor for SourceFile
@@ -118,6 +177,11 @@ static string ReadFile( const string& filename )
 SourceFile::SourceFile( const string& filename, const SourceCode* parent )
 	:	SourceCode( filename, 1, ReadFile( filename ), parent )
 {
+	if ( Listing::Instance().IsEnabled() )
+	{
+		SetRawLines( ReadRawLines( filename ), 1 );
+	}
+
 }
 
 

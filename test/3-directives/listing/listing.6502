@@ -1,0 +1,31 @@
+\ Checks the -list output (compared with listing.gold.lst): comments, blank lines,
+\ tab and space indents, macros, FOR loops, data, skipped IF blocks, INCLUDE and
+\ two SAVEs that reuse the same addresses.
+oswrch = &FFEE
+
+MACRO twice n
+	LDA #n		; load it
+	JSR oswrch
+ENDMACRO
+
+ORG &2000
+.start
+    twice 65          ; macro call
+    LDX #0:LDY #1
+    FOR i,0,1
+        NOP
+    NEXT
+	EQUB 1,2,3,4,5,6,7,8,9,10
+    EQUS "Hello world", 13
+    IF FALSE
+        BRK
+    ENDIF
+    INCLUDE "listing.inc.6502"
+.end
+SAVE "Main", start, end, start
+
+CLEAR &2000, &2100
+ORG &2000
+.bank2
+    RTS
+SAVE "Bank2", bank2, bank2+1

@@ -66,6 +66,11 @@ MacroInstance::MacroInstance( const Macro* macro, const SourceCode* sourceCode )
 	// Copy FOR stack from the parent
 
 	CopyForStack( sourceCode );
+
+	if ( !macro->GetRawLines().empty() )
+	{
+		SetRawLines( macro->GetRawLines(), macro->GetLineNumber() );
+	}
 }
 
 

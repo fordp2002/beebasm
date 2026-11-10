@@ -33,6 +33,20 @@
       "problemMatcher": "$gcc"
     },
     {
+      "label": "Clean BeebAsm",
+      "type": "process",
+      "command": "cmake",
+      "args": [
+        "--build",
+        "${workspaceFolder}/build",
+        "--config",
+        "Debug",
+        "--target",
+        "clean"
+      ],
+      "problemMatcher": []
+    },
+    {
       "label": "Test BeebAsm",
       "type": "process",
       "command": "ctest",
@@ -47,6 +61,27 @@
         "isDefault": true
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Install BeebASM (User)",
+      "type": "shell",
+      "command": "mkdir -p ~/.local/bin && cp ${workspaceFolder}/build/beebasm ~/.local/bin/beebasm && chmod +x ~/.local/bin/beebasm",
+      "windows": {
+        "command": "echo This task is only supported on Linux && exit 1"
+      },
+      "linux": {
+        "command": "mkdir -p ~/.local/bin && cp ${workspaceFolder}/build/beebasm ~/.local/bin/beebasm && chmod +x ~/.local/bin/beebasm"
+      },
+      "osx": {
+        "command": "echo This task is only supported on Linux && exit 1"
+      },
+      "dependsOn": "Build BeebAsm",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared",
+        "clear": true
+      }
     }
   ]
 }

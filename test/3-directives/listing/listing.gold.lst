@@ -1,0 +1,56 @@
+# BeebAsm listing, version 1
+# Fixed columns (0-based): 0-3 address (hex), 5-15 machine code (up to 4 bytes),
+# 18 flag, 20 onwards the source text exactly as written (tabs expanded to 4).
+# Flag: blank = main source file, I = line from an INCLUDEd file,
+# M = line from a macro expansion, . = more code from the line above.
+# A label or ORG line shows its address with no code. Other lines have no address.
+# A row starting with # in column 0 is a comment, never an address.
+# file: listing.6502
+                    \ Checks the -list output (compared with listing.gold.lst): comments, blank lines,
+                    \ tab and space indents, macros, FOR loops, data, skipped IF blocks, INCLUDE and
+                    \ two SAVEs that reuse the same addresses.
+                    oswrch = &FFEE
+
+                    MACRO twice n
+                        LDA #n      ; load it
+                        JSR oswrch
+                    ENDMACRO
+
+2000                ORG &2000
+2000                .start
+                        twice 65          ; macro call
+2000 A9 41        M     LDA #n      ; load it
+2002 20 EE FF     M     JSR oswrch
+2005 A2 00 A0 01        LDX #0:LDY #1
+                        FOR i,0,1
+2009 EA                     NOP
+                        NEXT
+200A EA                     NOP
+                        NEXT
+200B 01 02 03 04        EQUB 1,2,3,4,5,6,7,8,9,10
+200F 05 06 07 08  .
+2013 09 0A        .
+2015 48 65 6C 6C        EQUS "Hello world", 13
+2019 6F 20 77 6F  .
+201D 72 6C 64 0D  .
+                        IF FALSE
+                            BRK
+                        ENDIF
+                        INCLUDE "listing.inc.6502"
+# file: listing.inc.6502
+                  I \ utility routines
+2021              I .util_clear
+2021 A9 00        I     LDA #0          ; clear it
+2023 85 70        I     STA &70
+2025 60           I     RTS
+# file: listing.6502
+2026                .end
+                    SAVE "Main", start, end, start
+# SAVE "Main" 2000 2026 2000 2000   (start end exec reload)
+
+                    CLEAR &2000, &2100
+2000                ORG &2000
+2000                .bank2
+2000 60                 RTS
+                    SAVE "Bank2", bank2, bank2+1
+# SAVE "Bank2" 2000 2001 2000 2000   (start end exec reload)

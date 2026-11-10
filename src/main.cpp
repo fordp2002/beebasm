@@ -37,6 +37,7 @@
 #include "macro.h"
 #include "random.h"
 #include "version.h"
+#include "listing.h"
 
 
 using namespace std;
@@ -60,6 +61,7 @@ int main( int argc, char* argv[] )
 	const char* pDiscInputFile = NULL;
 	const char* pDiscOutputFile = NULL;
 	const char* pLabelsOutputFile = NULL;
+	const char* pListingFile = NULL;
 
 	enum STATES
 	{
@@ -74,7 +76,8 @@ int main( int argc, char* argv[] )
 		WAITING_FOR_DISC_CYCLE,
 		WAITING_FOR_SYMBOL,
 		WAITING_FOR_STRING_SYMBOL,
-		WAITING_FOR_LABELS_FILE
+		WAITING_FOR_LABELS_FILE,
+		WAITING_FOR_LISTING_FILE
 
 	} state = READY;
 
@@ -83,6 +86,7 @@ int main( int argc, char* argv[] )
 
 	GlobalData::Create();
 	SymbolTable::Create();
+	Listing::Create();
 
 	// Parse command line parameters
 
@@ -111,6 +115,10 @@ int main( int argc, char* argv[] )
 				else if ( strcmp( argv[i], "-boot" ) == 0 )
 				{
 					state = WAITING_FOR_BOOT_FILENAME;
+				}
+				else if ( strcmp( argv[i], "-list" ) == 0 )
+				{
+					state = WAITING_FOR_LISTING_FILE;
 				}
 				else if ( strcmp( argv[i], "-labels" ) == 0 )
 				{
@@ -172,6 +180,7 @@ int main( int argc, char* argv[] )
 					cout << " -do <file>     Specify a disc image file to output" << endl;
 					cout << " -boot <file>   Specify a filename to be run by !BOOT on a new disc image" << endl;
 					cout << " -labels <file> Specify a filename to export any labels dumped with -d or -dd to" << endl;
+					cout << " -list <file>   Specify a filename to write a source listing to (code and source, for debuggers)" << endl;
 					cout << " -opt <opt>     Specify the *OPT 4,n for the generated disc image" << endl;
 					cout << " -title <title> Specify the title for the generated disc image" << endl;
 					cout << " -cycle <n>     Specify the cycle for the generated disc image" << endl;
@@ -191,6 +200,13 @@ int main( int argc, char* argv[] )
 					cerr << "Type beebasm --help for options" << endl;
 					return EXIT_FAILURE;
 				}
+				break;
+
+
+			case WAITING_FOR_LISTING_FILE:
+
+				pListingFile = argv[i];
+				state = READY;
 				break;
 
 
@@ -304,6 +320,12 @@ int main( int argc, char* argv[] )
 	}
 
 
+	if ( pListingFile != NULL && !Listing::Instance().Open( pListingFile ) )
+	{
+		cerr << "Could not open listing file for writing: " << pListingFile << endl;
+		return EXIT_FAILURE;
+	}
+
 	// All good, start the assembling
 
 	int exitCode = EXIT_SUCCESS;
@@ -341,6 +363,8 @@ int main( int argc, char* argv[] )
 
 	delete pDiscIm;
 
+	Listing::Instance().Close( exitCode == EXIT_SUCCESS );
+
 	if ( (bDumpSymbols || bDumpAllSymbols) && exitCode == EXIT_SUCCESS )
 	{
 		SymbolTable::Instance().Dump(bDumpSymbols, bDumpAllSymbols, pLabelsOutputFile);
@@ -354,6 +378,7 @@ int main( int argc, char* argv[] )
 	MacroTable::Destroy();
 	ObjectCode::Destroy();
 	SymbolTable::Destroy();
+	Listing::Destroy();
 	GlobalData::Destroy();
 
 	return exitCode;
