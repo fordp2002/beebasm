@@ -2,6 +2,7 @@
 *.bak
 *.swp
 /beebasm
+/build/
 /src/objects
 test/testlog.txt
 test/**/test
